@@ -1,5 +1,7 @@
 # pliki projektowe
-data/
+data/RAW/
+data/old/
+data/bak/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
