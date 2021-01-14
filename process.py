@@ -1,6 +1,7 @@
 #%%
 from os import walk
 import os.path
+import re
 
 import pandas as pd
 import numpy as np
@@ -11,12 +12,18 @@ from scipy.stats import kurtosis
 from scipy.stats import beta
 import samplerate
 import matplotlib as mpl
+from matplotlib import gridspec
 
 # konfiguracja
 verbose = True
 regen_intermediate=False
+small_run = True # testy tylko na 2 plikach
 
-path = "./data/RAW"
+test_files = ['brak_gaz_k_01_', 'brak_k_01_']
+
+path_data = ".\data\RAW"
+path_photo = ".\data\photo"
+path_interm = ".\data\interm"
 ext_P = "4.txt"
 ext_U = "1.txt"
 ext_I = "0.txt"
@@ -83,8 +90,12 @@ def buffer(X = np.array([]), n = 1, p = 0):
 # jedziemy...
 
 # zbierz nazwy plików i ekstrachuj początki
-(_, _,  files) = next(walk("./data/Raw_P"))
-files = [f.rsplit('4', 1)[0] for f in files]
+if small_run:
+    files = test_files
+else:
+    (_, _,  files) = next(walk(path_data))
+    files = [re.split('0[0-4]', f)[0] for f in files]
+    files = list(set(files))
 #%%
 
 for fn in files:
@@ -92,14 +103,14 @@ for fn in files:
         print(f"przetwarzany plik: {fn}")
     
     # zassij dane do dataframów
-    picklename = os.path.join(path, fn + ".pkl")
+    picklename = os.path.join(path_interm, fn + ".pkl")
 
     if not os.path.exists(picklename) or regen_intermediate:
-        df = pd.read_csv(os.path.join(path, fn + ext_P), names=["p"], header=None)
-        df['U'] = pd.read_csv(os.path.join(path, fn + ext_U), names=["U"], header=None)
-        df['I'] = pd.read_csv(os.path.join(path, fn + ext_I), names=["I"], header=None)
-        if os.path.exists(os.path.join(path, fn + ext_G)):
-            df['G'] = pd.read_csv(os.path.join(path, fn + ext_G), names=["G"], header=None)
+        df = pd.read_csv(os.path.join(path_data, fn + ext_P), names=["p"], header=None)
+        df['U'] = pd.read_csv(os.path.join(path_data, fn + ext_U), names=["U"], header=None)
+        df['I'] = pd.read_csv(os.path.join(path_data, fn + ext_I), names=["I"], header=None)
+        if os.path.exists(os.path.join(path_data, fn + ext_G)):
+            df['G'] = pd.read_csv(os.path.join(path_data, fn + ext_G), names=["G"], header=None)
         
         # wstępny downsampling do 25e+3 Sps
         data_np = df.to_numpy()
@@ -118,8 +129,6 @@ for fn in files:
     X = df['p'].to_numpy()
     Xob = np.zeros((len(X), len(obcfreq)))
 
-    if verbose:
-        fig, ax = plt.subplots()
     for oct in range(len(obcfreq)):
         bwf = signal.butter(
             N=N_ord, 
@@ -127,14 +136,13 @@ for fn in files:
             btype='bandpass',
             analog=False,
             output='sos' )
-        if verbose:
-            _showfilter(bwf, obcfreq[oct], fs, ax)
+        # if verbose:
+        #     _showfilter(bwf, obcfreq[oct], fs, ax)
         
         Xob[:, oct] = signal.sosfilt(bwf, X)
-    
-    if verbose:
-        plt.show()
-        
+
+    # half-window 0 padding before stats calculation to align stats with other variables
+    Xob = np.vstack([np.zeros((int(np.floor(ws/2)), np.shape(Xob)[1])), Xob])    
     # generowanie wartości cech
     m = int(np.floor((np.size(Xob, 0)-ws)/(ws*(1-ol))) + 1) #liczba okien
     #Y shape: (m windows, oct octaves, statf statistics)
@@ -150,16 +158,59 @@ for fn in files:
                 Y[iwin, ioct, isf] = (statf[isf])(Xbuf[:, iwin])
 
     
-    for isf in range(len(statf)):
-        plt.imshow(
-            Y[:,:,isf].transpose(), 
-            cmap='viridis',
-            norm=mpl.colors.Normalize(vmin=Y[:,:,isf].min(), vmax=Y[:,:,isf].max()), 
-            aspect='auto')
-        plt.show()
+    # for isf in range(len(statf)):
+    #     plt.imshow(
+    #         Y[:,:,isf].transpose(), 
+    #         cmap='viridis',
+    #         norm=mpl.colors.Normalize(vmin=Y[:,:,isf].min(), vmax=Y[:,:,isf].max()), 
+    #         aspect='auto')
+    #     plt.show()
 
 # end of file loop
 
+# %%
+# plotting playground
+plot_style = {
+    'linewidth': 0.5,
+    }
+nrow = 5
+ncol = 1
 
+fig, axes = plt.subplots(
+    nrow, ncol,
+    gridspec_kw=dict(wspace=0.0, hspace=0.0,
+                     top=1. - 0.5 / (nrow + 1), bottom=0.5 / (nrow + 1),
+                     left=0.5 / (ncol + 1), right=1 - 0.5 / (ncol + 1)),
+    figsize=(6.3, 10),
+    sharex='col'
+    )
+axes[0].imshow(
+    Y[:,:,0].transpose(), 
+    cmap='viridis',
+    norm=mpl.colors.Normalize(vmin=Y[:,:,isf].min(), vmax=Y[:,:,isf].max()), 
+    aspect='auto',
+    origin='lower',
+    extent = [0 , len(df)/fs, 1 , 11]
+    )
+axes[0].set_ylabel("oktawa")
+axes[1].plot(df.index.to_numpy()/fs, df['I'], **plot_style)
+axes[1].set_ylabel("I, A")
+axes[2].plot(df.index.to_numpy()/fs, df['U'], **plot_style)
+axes[2].set_ylabel("U, V")
+lico = plt.imread(os.path.join(path_photo, fn + "lico.jpg"))
+axes[3].imshow(
+    lico,
+    extent = [0 , len(df)/fs, -1 , 1]
+    )
+axes[3].set_ylabel("lico")
+gran = plt.imread(os.path.join(path_photo, fn + "gran.jpg"))
+axes[4].imshow(
+    gran, 
+    extent = [0 , len(df)/fs, -1 , 1]
+    )
+axes[4].set_ylabel("grań")
 
+axes[-1].set_xlabel("t, s")
+for ax in axes:
+    ax.grid(axis='x', which='both')
 # %%
