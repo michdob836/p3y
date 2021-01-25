@@ -13,13 +13,18 @@ from scipy.stats import beta
 import samplerate
 import matplotlib as mpl
 from matplotlib import gridspec
+import matplotlib as mpl
 
 # konfiguracja
 verbose = True
 regen_intermediate=False
 small_run = True # testy tylko na 2 plikach
 
-test_files = ['brak_gaz_k_01_', 'brak_k_01_']
+test_files = [
+    #'brak_gaz_k_01_', 
+    #'brak_k_01_',
+    'zabr_olej_k_01_',
+]
 
 path_data = ".\data\RAW"
 path_photo = ".\data\photo"
@@ -84,7 +89,7 @@ def buffer(X = np.array([]), n = 1, p = 0):
     columns = range(0,m)
     for startIndex,column in zip(startIndexes, columns):
         data[:,column] = X[startIndex:startIndex + n] #fill in by column
-    return data, np.array(startIndexes) + np.floor(n/2) 
+    return data, np.array(startIndexes)
 
 
 # jedziemy...
@@ -166,12 +171,59 @@ for fn in files:
     #         aspect='auto')
     #     plt.show()
 
+    ws = 512
+    V = df['U'].to_numpy()
+    V = np.hstack([np.zeros((int(np.floor(ws/2)))), V])
+    m = int(np.floor((np.size(V)-ws)/(ws*(1-ol))) + 1) #liczba okien
+    Vbuf, _ = buffer(V, ws, ws*ol)
+    
+    nbins = 512
+    Vhist = np.zeros((nbins, m))
+    histminmax = (V.min(), V.max())
+    for i in range(m):
+        Vhist[:, i], _ = np.histogram(Vbuf[i,:], bins=nbins, range=histminmax)
+    Vhist = (Vhist-Vhist.min(0))/(Vhist.max(0)-Vhist.min(0))
+    mpl.image.imsave("V.png", np.flipud(Vhist), cmap='plasma' )
+
+
+
 # end of file loop
 
 # %%
-# plotting playground
+# latex plotting version
+
+# preamble
+texsrc = r'''\documentclass{mwart} 
+\usepackage[utf8]{inputenc}
+\usepackage[MeX]{polski}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{rotating}
+
+\title{pp\_MD}
+\author{Michał Dobrut}
+\date{\today}
+
+\begin{document}
+
+\begin{sidewaysfigure}[ht]
+    \includegraphics[width=\textwidth]{figure.png}
+    \caption{Caption in landscape to a figure in landscape.}'''
+
+
+
+
+texsrc += r'''
+\label{fig:LandscapeFigure}
+\end{sidewaysfigure}
+\end{document}'''
+
+
+# %%
+# pyplotting version
 plot_style = {
-    'linewidth': 0.5,
+    'linewidth': 0.25,
     }
 nrow = 5
 ncol = 1
@@ -181,34 +233,46 @@ fig, axes = plt.subplots(
     gridspec_kw=dict(wspace=0.0, hspace=0.0,
                      top=1. - 0.5 / (nrow + 1), bottom=0.5 / (nrow + 1),
                      left=0.5 / (ncol + 1), right=1 - 0.5 / (ncol + 1)),
-    figsize=(6.3, 10),
-    sharex='col'
+    figsize=(21, 7.3),
+    dpi=300,
+    sharex='col',
     )
+
+Y = (Y-Y.min(0))/(Y.max(0)-Y.min(0))
 axes[0].imshow(
     Y[:,:,0].transpose(), 
     cmap='viridis',
     norm=mpl.colors.Normalize(vmin=Y[:,:,isf].min(), vmax=Y[:,:,isf].max()), 
     aspect='auto',
     origin='lower',
-    extent = [0 , len(df)/fs, 1 , 11]
+    extent = [0 , len(df)/fs, 1 , 11],
+    interpolation='none',
     )
 axes[0].set_ylabel("oktawa")
+
 axes[1].plot(df.index.to_numpy()/fs, df['I'], **plot_style)
 axes[1].set_ylabel("I, A")
+
 axes[2].plot(df.index.to_numpy()/fs, df['U'], **plot_style)
 axes[2].set_ylabel("U, V")
+
 lico = plt.imread(os.path.join(path_photo, fn + "lico.jpg"))
 axes[3].imshow(
     lico,
-    extent = [0 , len(df)/fs, -1 , 1]
+    extent = [0 , len(df)/fs, -1 , 1],
     )
 axes[3].set_ylabel("lico")
+axes[3].set_yticks([])
+axes[3].set_position(mpl.transforms.Bbox([[0.25, 0.27], [0.75, 0.50]]))
+
 gran = plt.imread(os.path.join(path_photo, fn + "gran.jpg"))
 axes[4].imshow(
     gran, 
-    extent = [0 , len(df)/fs, -1 , 1]
+    extent = [0 , len(df)/fs, -1 , 1],
     )
 axes[4].set_ylabel("grań")
+axes[4].set_yticks([])
+axes[4].set_position(mpl.transforms.Bbox([[0.25, 0.13], [0.75, 0.50]]))
 
 axes[-1].set_xlabel("t, s")
 for ax in axes:
