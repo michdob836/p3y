@@ -9,7 +9,6 @@ from scipy import signal
 import matplotlib.pyplot as plt
 from math import sqrt
 from scipy.stats import kurtosis
-from scipy.stats import beta
 import samplerate
 import matplotlib as mpl
 from matplotlib import gridspec
@@ -18,7 +17,7 @@ import matplotlib as mpl
 # konfiguracja
 verbose = True
 regen_intermediate=False
-small_run = True # testy tylko na 2 plikach
+small_run = True # testy tylko na kilku plikach
 
 test_files = [
     #'brak_gaz_k_01_', 
@@ -26,9 +25,12 @@ test_files = [
     'zabr_olej_k_01_',
 ]
 
-path_data = ".\data\RAW"
-path_photo = ".\data\photo"
-path_interm = ".\data\interm"
+path_data = r".\data\RAW"
+path_photo = r".\data\photo"
+path_interm = r".\data\interm"
+path_tex = r".\tex"
+path_texinput = r"interm"
+path_texinterm = r".\tex\interm"
 ext_P = "4.txt"
 ext_U = "1.txt"
 ext_I = "0.txt"
@@ -44,12 +46,28 @@ ol = 0.25 # zakładka okna <0:1)
 
 statf = [
     lambda w: kurtosis(w), # kurt
-    #lambda w: beta.fit(w)[0], # beta a param
-    #lambda w: beta.fit(w)[1],  # beta b param 
+    lambda w: entropy(w),
+    lambda w: beta_a(w),
+    lambda w: beta_b(w),
     # lambda w: # rice freq
 ]
 
 #%%
+def entropy(X, lower=-1, upper=1, nbins=2048):
+    Xhist = np.zeros(nbins)
+    Xhist, _ = np.histogram(X.transpose(), bins=nbins, range=(lower, upper))
+    Xhist = Xhist / sum(Xhist)
+    return - np.sum(np.nan_to_num(Xhist * np.log10(Xhist)))
+
+def beta_a(w):
+    m = w.mean()
+    v = w.var()
+    return (m * (1 - m) / v - 1) * m
+
+def beta_b(w):
+    m = w.mean()
+    v = w.var()
+    return (m * (1 - m) / v - 1) * (1 - m)
 
 # definicje funkcji
 def _showfilter(sos, freq, fs, ax):
@@ -116,12 +134,14 @@ for fn in files:
         df['I'] = pd.read_csv(os.path.join(path_data, fn + ext_I), names=["I"], header=None)
         if os.path.exists(os.path.join(path_data, fn + ext_G)):
             df['G'] = pd.read_csv(os.path.join(path_data, fn + ext_G), names=["G"], header=None)
-        
-        # wstępny downsampling do 25e+3 Sps
+
+        # wstępny downsampling
         data_np = df.to_numpy()
         data_np = samplerate.resample(data_np, resample_ratio, converter_type='sinc_best', verbose=verbose)
         df = pd.DataFrame(data_np, columns=df.columns)
 
+        df['t'] = df.index.values / fs
+        df = df.set_index('t')
         if verbose:
             print(f"pikluję downsamplowane sygnały jako: {picklename}")
         df.to_pickle(picklename)
@@ -129,6 +149,26 @@ for fn in files:
         if verbose:
                 print(f"ładuję intermed. z dysku: {picklename}")
         df = pd.read_pickle(picklename)
+
+    # obróbka wykresów pomocniczych - napięcie
+    V = df['U'].to_numpy()
+    V = np.hstack([np.zeros((int(np.floor(ws/2)))), V])
+    m = int(np.floor((np.size(V)-ws)/(ws*(1-ol))) + 1) #liczba okien
+    Vbuf, _ = buffer(V, ws, ws*ol)
+    nbins = 128
+    Vhist = np.zeros((nbins, m))
+    histminmax = (V.min(), V.max())
+    for i in range(m):
+        Vhist[:, i], _ = np.histogram(Vbuf[:,i], bins=nbins, range=histminmax)
+    Vhist = (Vhist-Vhist.min(0))/(Vhist.max(0)-Vhist.min(0))
+    mpl.image.imsave(os.path.join(path_texinterm, f"{fn}V.png"), np.flipud(Vhist), cmap='gray_r' )
+
+    # downsampling prądu aby dało się go odczytać na wykresie
+    data_np = df['I'].to_numpy()
+    data_np = samplerate.resample(data_np, 0.02, converter_type='sinc_best', verbose=verbose)
+    data_np = samplerate.resample(data_np, 0.1, converter_type='sinc_best', verbose=verbose)
+    pd.DataFrame(data_np, index=np.linspace(0, len(data_np)/fs/0.02/0.1, len(data_np)) ).to_csv(
+        os.path.join(path_texinterm, f"{fn}I.csv"), header=None)
     
     # generowanie filtrów jako systemów 2. rzędu i filtracja
     X = df['p'].to_numpy()
@@ -153,7 +193,7 @@ for fn in files:
     #Y shape: (m windows, oct octaves, statf statistics)
     Y = np.zeros((m, len(obcfreq), len(statf)))
     
-    
+    # generowanie statystyk
     for ioct in range(len(obcfreq)):
         if verbose:
             print(f"processing {obcfreq[ioct]}Hz band")
@@ -162,63 +202,184 @@ for fn in files:
             for iwin in range(m):
                 Y[iwin, ioct, isf] = (statf[isf])(Xbuf[:, iwin])
 
-    
-    # for isf in range(len(statf)):
-    #     plt.imshow(
-    #         Y[:,:,isf].transpose(), 
-    #         cmap='viridis',
-    #         norm=mpl.colors.Normalize(vmin=Y[:,:,isf].min(), vmax=Y[:,:,isf].max()), 
-    #         aspect='auto')
-    #     plt.show()
+# exporting calculated stat data as color mapped matrices
+    for isf in range(len(statf)):
+        if not isf == 1:
+            Y[:,:,isf] = (Y[:,:,isf]-Y[:,:,isf].min(0))/(Y[:,:,isf].max(0)-Y[:,:,isf].min(0))
+        mpl.image.imsave(os.path.join(path_texinterm, f"{fn}{isf}.png"), np.flipud(Y[:,:,isf].transpose()), cmap='viridis' )
 
-    ws = 512
-    V = df['U'].to_numpy()
-    V = np.hstack([np.zeros((int(np.floor(ws/2)))), V])
-    m = int(np.floor((np.size(V)-ws)/(ws*(1-ol))) + 1) #liczba okien
-    Vbuf, _ = buffer(V, ws, ws*ol)
-    
-    nbins = 512
-    Vhist = np.zeros((nbins, m))
-    histminmax = (V.min(), V.max())
-    for i in range(m):
-        Vhist[:, i], _ = np.histogram(Vbuf[i,:], bins=nbins, range=histminmax)
-    Vhist = (Vhist-Vhist.min(0))/(Vhist.max(0)-Vhist.min(0))
-    mpl.image.imsave("V.png", np.flipud(Vhist), cmap='plasma' )
+# generowanie strony w texu
+if verbose:
+    print("generuję plik wejściowy tex")
+xmax = m * ws / fs
 
+tex = ""
+tex += r'''
+    \begin{tikzpicture}
+    \begin{groupplot}[
+        group style={
+            group name=pp_stack,
+            group size=1 by 5,
+            xlabels at=edge bottom,
+            xticklabels at=edge bottom,
+            vertical sep=2pt
+        },
+        footnotesize,
+        width=22cm,
+        height=4.2cm,
+        xlabel={czas, s},
+        xmin=0,'''
+tex += f' xmax={xmax},'
+tex += r'''
+        ymin=0, 
+        tickpos=left,
+        ytick align=outside,
+        xtick align=outside,
+        enlargelimits=false,
+    ]
+    \nextgroupplot[
+        ylabel=kurtoza,
+        ytick={2, 6, 10},
+        yticklabels={63 Hz, 1 kHz,  16 kHz}, 
+        colorbar,
+        colorbar style={
+    point meta min=0,
+    point meta max=12,
+    tickpos=right,
+    colormap name = viridis
+        }
+    ]
+    \addplot graphics [
+    xmin=0,'''
+tex += f' xmax={xmax},'
+tex += r'''
+        ymin=0, 
+        ymax=10, ] 
+        {'''
+tex += f'{os.path.join(path_texinput, fn + "0.png")}'
+tex += r'''};
 
+    \nextgroupplot[
+        ylabel=entropia,
+        ytick={2, 6, 10},
+        yticklabels={63 Hz, 1 kHz,  16 kHz},
+    colorbar,
+        colorbar style={
+    point meta min=0,
+    point meta max=12,
+    tickpos=right,
+    colormap name = viridis}
+    ]
+    \addplot graphics
+        [xmin=0,'''
+tex += f'xmax={xmax},'
+tex += r'''
+        ,ymin=0,
+        ymax=10] 
+        {'''
+tex += f'{os.path.join(path_texinput, fn + "1.png")}'
+tex += r'''};
 
+    \nextgroupplot[
+    ylabel=beta a,
+        ytick={2, 6, 10},
+        yticklabels={63 Hz, 1 kHz,  16 kHz},
+        colorbar,
+        colorbar style={
+    point meta min=0,
+    point meta max=12,
+    tickpos=right,
+    colormap name = viridis}
+    ]
+    \addplot graphics
+        [xmin=0,'''
+tex += f' xmax={xmax},'
+tex += r'''
+        ,ymin=0
+        ,ymax=10] 
+        {'''
+tex += f'{os.path.join(path_texinput, fn + "2.png")}'
+tex += r'''};
+
+    \nextgroupplot[
+    ylabel=beta b,
+        ytick={2, 6, 10},
+        yticklabels={63 Hz, 1 kHz,  16 kHz},
+    colorbar,
+        colorbar style={
+    point meta min=0,
+    point meta max=12,
+    tickpos=right,
+    colormap name = viridis}
+    ]
+    \addplot graphics
+        [xmin=0,'''
+tex += f' xmax={xmax},'
+tex += r'''
+        ymin=0,
+        ymax=10] 
+        {'''
+tex += f'{os.path.join(path_texinput, fn + "3.png")}'
+tex += r'''};
+
+    \nextgroupplot[
+        ylabel={{\color{blue}U, V}; {\color{red} I, A} } ,
+    colorbar,
+        colorbar style={
+    point meta min=0,
+    point meta max=12,
+        tickpos=right,
+    colormap name = blackwhite}]
+    \addplot graphics
+        [xmin=0,'''
+tex += f' xmax={xmax},'
+tex += r'''
+        ymin=0,
+        ymax=5.0526] 
+        {'''
+tex += f'{os.path.join(path_texinput, fn + "V.png")}'
+tex += r'''};
+
+    \end{groupplot}
+    \end{tikzpicture}'''
+
+with open( os.path.join(path_tex, fn+".tex"), 'w') as texfile:
+    texfile.write(tex)
+
+if verbose:
+    print(f"plik {fn} gotowy.")
 # end of file loop
 
 # %%
-# latex plotting version
+# generowanie głownego pliku tex 
 
-# preamble
-texsrc = r'''\documentclass{mwart} 
+main_tex = r'''\documentclass{article} 
 \usepackage[utf8]{inputenc}
-\usepackage[MeX]{polski}
+\usepackage[a4paper, margin=2cm]{geometry}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.5}
+\usetikzlibrary{pgfplots.groupplots}
+\usepackage{pdflscape}
 \usepackage{xcolor}
-\usepackage{url}
-\usepackage{graphicx}
-\usepackage{rotating}
-
-\title{pp\_MD}
-\author{Michał Dobrut}
-\date{\today}
+\pgfplotsset{
+	colormap={blackwhite}{gray(0cm)=(1);gray(1cm)=(0)}
+}
 
 \begin{document}
+\begin{landscape}
+'''
+for fn in files:
+    main_tex += "\t" + r"\input{" + fn + r".tex}" + "\n"
+    
+main_tex += r'''
+\end{landscape}
+\end{document}
+'''
+with open(os.path.join(path_tex, "main.tex"), "w") as main_tex_file:
+    main_tex_file.write(main_tex)
 
-\begin{sidewaysfigure}[ht]
-    \includegraphics[width=\textwidth]{figure.png}
-    \caption{Caption in landscape to a figure in landscape.}'''
-
-
-
-
-texsrc += r'''
-\label{fig:LandscapeFigure}
-\end{sidewaysfigure}
-\end{document}'''
-
+if verbose:
+    print("wygenerowano główny plik tex.")
 
 # %%
 # pyplotting version
