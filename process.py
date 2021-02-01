@@ -14,6 +14,8 @@ import matplotlib as mpl
 from matplotlib import gridspec
 import matplotlib as mpl
 
+from PIL import Image
+
 # konfiguracja
 verbose = True
 regen_intermediate=False
@@ -26,11 +28,11 @@ test_files = [
 ]
 
 path_data = r".\data\RAW"
-path_photo = r".\data\photo"
+path_photo = r".\tex\photo"
 path_interm = r".\data\interm"
 path_tex = r".\tex"
-path_texinput = r"interm"
-path_texinterm = r".\tex\interm"
+path_texinput = r""
+path_texinterm = r".\tex"
 ext_P = "4.txt"
 ext_U = "1.txt"
 ext_I = "0.txt"
@@ -160,6 +162,7 @@ for fn in files:
     histminmax = (V.min(), V.max())
     for i in range(m):
         Vhist[:, i], _ = np.histogram(Vbuf[:,i], bins=nbins, range=histminmax)
+    V_hist_plot_max_intensity_ms = Vhist.max() / fs * 1000 * (1-ol)
     Vhist = (Vhist-Vhist.min(0))/(Vhist.max(0)-Vhist.min(0))
     mpl.image.imsave(os.path.join(path_texinterm, f"{fn}V.png"), np.flipud(Vhist), cmap='gray_r' )
 
@@ -202,152 +205,199 @@ for fn in files:
             for iwin in range(m):
                 Y[iwin, ioct, isf] = (statf[isf])(Xbuf[:, iwin])
 
-# exporting calculated stat data as color mapped matrices
+    # exporting calculated stat data as color mapped matrices
     for isf in range(len(statf)):
         if not isf == 1:
             Y[:,:,isf] = (Y[:,:,isf]-Y[:,:,isf].min(0))/(Y[:,:,isf].max(0)-Y[:,:,isf].min(0))
         mpl.image.imsave(os.path.join(path_texinterm, f"{fn}{isf}.png"), np.flipud(Y[:,:,isf].transpose()), cmap='viridis' )
 
-# generowanie strony w texu
-if verbose:
-    print("generuję plik wejściowy tex")
-xmax = m * ws / fs
+    # generowanie strony w texu
+    if verbose:
+        print("generuję plik wejściowy tex")
+    xmax = len(X) / fs
+    plot_width_cm = 22
 
-tex = ""
-tex += r'''
-    \begin{tikzpicture}
-    \begin{groupplot}[
-        group style={
-            group name=pp_stack,
-            group size=1 by 5,
-            xlabels at=edge bottom,
-            xticklabels at=edge bottom,
-            vertical sep=2pt
-        },
-        footnotesize,
-        width=22cm,
-        height=4.2cm,
-        xlabel={czas, s},
-        xmin=0,'''
-tex += f' xmax={xmax},'
-tex += r'''
-        ymin=0, 
-        tickpos=left,
-        ytick align=outside,
-        xtick align=outside,
-        enlargelimits=false,
-    ]
-    \nextgroupplot[
-        ylabel=kurtoza,
-        ytick={2, 6, 10},
-        yticklabels={63 Hz, 1 kHz,  16 kHz}, 
-        colorbar,
-        colorbar style={
-    point meta min=0,
-    point meta max=12,
-    tickpos=right,
-    colormap name = viridis
-        }
-    ]
-    \addplot graphics [
-    xmin=0,'''
-tex += f' xmax={xmax},'
-tex += r'''
-        ymin=0, 
-        ymax=10, ] 
-        {'''
-tex += f'{os.path.join(path_texinput, fn + "0.png")}'
-tex += r'''};
-
-    \nextgroupplot[
-        ylabel=entropia,
-        ytick={2, 6, 10},
-        yticklabels={63 Hz, 1 kHz,  16 kHz},
-    colorbar,
-        colorbar style={
-    point meta min=0,
-    point meta max=12,
-    tickpos=right,
-    colormap name = viridis}
-    ]
-    \addplot graphics
-        [xmin=0,'''
-tex += f'xmax={xmax},'
-tex += r'''
-        ,ymin=0,
-        ymax=10] 
-        {'''
-tex += f'{os.path.join(path_texinput, fn + "1.png")}'
-tex += r'''};
-
-    \nextgroupplot[
-    ylabel=beta a,
-        ytick={2, 6, 10},
-        yticklabels={63 Hz, 1 kHz,  16 kHz},
-        colorbar,
-        colorbar style={
-    point meta min=0,
-    point meta max=12,
-    tickpos=right,
-    colormap name = viridis}
-    ]
-    \addplot graphics
-        [xmin=0,'''
-tex += f' xmax={xmax},'
-tex += r'''
-        ,ymin=0
-        ,ymax=10] 
-        {'''
-tex += f'{os.path.join(path_texinput, fn + "2.png")}'
-tex += r'''};
-
-    \nextgroupplot[
-    ylabel=beta b,
-        ytick={2, 6, 10},
-        yticklabels={63 Hz, 1 kHz,  16 kHz},
-    colorbar,
-        colorbar style={
-    point meta min=0,
-    point meta max=12,
-    tickpos=right,
-    colormap name = viridis}
-    ]
-    \addplot graphics
-        [xmin=0,'''
-tex += f' xmax={xmax},'
-tex += r'''
-        ymin=0,
-        ymax=10] 
-        {'''
-tex += f'{os.path.join(path_texinput, fn + "3.png")}'
-tex += r'''};
-
-    \nextgroupplot[
-        ylabel={{\color{blue}U, V}; {\color{red} I, A} } ,
-    colorbar,
-        colorbar style={
-    point meta min=0,
-    point meta max=12,
+    tex = ""
+    tex += r'''
+        \begin{tikzpicture}
+        \begin{groupplot}[
+            group style={
+                group name=pp_stack,
+                group size=1 by 7,
+                xlabels at=edge bottom,
+                xticklabels at=edge bottom,
+                vertical sep=2pt
+            },
+            footnotesize,
+            '''
+    tex += f'width={plot_width_cm}cm,'
+    tex += r'''
+            height=3.8cm,
+            xlabel={czas, s},
+            xmin=0,'''
+    tex += f' xmax={xmax},'
+    tex += r'''
+            ymin=0, 
+            tickpos=left,
+            ytick align=outside,
+            xtick align=outside,
+            enlargelimits=false,
+        ]
+        \nextgroupplot[
+            ylabel=kurtoza,
+            ytick={2, 6, 10},
+            yticklabels={63 Hz, 1 kHz,  16 kHz}, 
+            colorbar,
+            colorbar style={
+        point meta min=0,
+        point meta max=1,
         tickpos=right,
-    colormap name = blackwhite}]
+        colormap name = viridis
+            }
+        ]
+        \addplot graphics [
+        xmin=0,'''
+    tex += f' xmax={xmax},'
+    tex += r'''
+            ymin=0, 
+            ymax=10, ] 
+            {'''
+    tex += f'{fn}0.png'
+    tex += r'''};
+
+        \nextgroupplot[
+            ylabel=entropia,
+            ytick={2, 6, 10},
+            yticklabels={63 Hz, 1 kHz,  16 kHz},
+        colorbar,
+            colorbar style={
+        point meta min=0,
+        point meta max=1,
+        tickpos=right,
+        ytick={0.2,0.4,0.6,0.8},
+        colormap name = viridis}
+        ]
+        \addplot graphics
+            [xmin=0,'''
+    tex += f'xmax={xmax},'
+    tex += r'''
+            ,ymin=0,
+            ymax=10] 
+            {'''
+    tex += f'{os.path.join(path_texinput, fn + "1.png")}'
+    tex += r'''};
+
+        \nextgroupplot[
+        ylabel=beta a,
+            ytick={2, 6, 10},
+            yticklabels={63 Hz, 1 kHz,  16 kHz},
+            colorbar,
+            colorbar style={
+        point meta min=0,
+        point meta max=12,
+        tickpos=right,
+        colormap name = viridis}
+        ]
+        \addplot graphics
+            [xmin=0,'''
+    tex += f' xmax={xmax},'
+    tex += r'''
+            ,ymin=0
+            ,ymax=10] 
+            {'''
+    tex += f'{os.path.join(path_texinput, fn + "2.png")}'
+    tex += r'''};
+
+        \nextgroupplot[
+        ylabel=beta b,
+            ytick={2, 6, 10},
+            yticklabels={63 Hz, 1 kHz,  16 kHz},
+        colorbar,
+            colorbar style={
+        point meta min=0,
+        point meta max=12,
+        tickpos=right,
+        colormap name = viridis}
+        ]
+        \addplot graphics
+            [xmin=0,'''
+    tex += f' xmax={xmax},'
+    tex += r'''
+            ymin=0,
+            ymax=10] 
+            {'''
+    tex += f'{os.path.join(path_texinput, fn + "3.png")}'
+    tex += r'''};
+
+        \nextgroupplot[
+            ylabel={U, V; {\color{red} I, A} } ,
+        colorbar,
+            colorbar style={
+        point meta min=0,
+        point meta max=1,
+            tickpos=right,
+        ytick={0.2, 0.8},
+        '''
+    tex += f'yticklabels={{{round(0.2*V_hist_plot_max_intensity_ms, 1)}ms, {round(0.8*V_hist_plot_max_intensity_ms, 1)}ms}},'
+    tex += r'''colormap name = blackwhite},]
+    
     \addplot graphics
-        [xmin=0,'''
-tex += f' xmax={xmax},'
-tex += r'''
-        ymin=0,
-        ymax=5.0526] 
-        {'''
-tex += f'{os.path.join(path_texinput, fn + "V.png")}'
-tex += r'''};
+            [xmin=0,'''
+    tex += f' xmax={xmax},'
+    tex += r'''
+            ymin=0,
+            ymax=5.0526] 
+            {'''
+    tex += f'{os.path.join(path_texinput, fn + "V.png")}'
+    tex += r'''};
+        \addplot table [col sep=comma, mark=none] {'''
+    tex += f'{os.path.join(path_texinput, fn + "I.csv")}'
+    tex += r'''};'''
 
-    \end{groupplot}
-    \end{tikzpicture}'''
+    # chcemy zachowac aspect ratio
+    image_ax_height = 0
+    with Image.open(os.path.join(path_photo, fn + "lico.jpg")) as im:
+        im_width, im_height = im.size
+        image_ax_height = plot_width_cm / im_width * im_height
 
-with open( os.path.join(path_tex, fn+".tex"), 'w') as texfile:
-    texfile.write(tex)
+    tex += r'''
+        \nextgroupplot['''
+    tex += f'height={image_ax_height}cm,'
+    tex += r'''
+            ylabel={lico},
+            ytick = \empty, ]
+        \addplot graphics  [
+            xmin=0, xmax=47.01388,
+            ymin=0,
+            ymax=10] 
+            {photo/zabr_olej_k_01_lico.jpg};
+            
+        \nextgroupplot['''
+    image_ax_height = 0
+    with Image.open(os.path.join(path_photo, fn + "gran.jpg")) as im:
+        im_width, im_height = im.size
+        image_ax_height = xmax / im_width * im_height
+    tex += f'height={image_ax_height}cm,'
+    tex += r'''
+            ylabel={gran},
+            ytick = \empty, ]
+        \addplot graphics  [
+            xmin=0, xmax=47.01388,
+            ymin=0,ymax=5] 
+            {photo/zabr_olej_k_01_gran.jpg};
+        '''
 
-if verbose:
-    print(f"plik {fn} gotowy.")
+    tex += r'''
+        \end{groupplot}
+        \end{tikzpicture}
+        '''
+
+
+    with open( os.path.join(path_tex, fn+".tex"), 'w') as texfile:
+        texfile.write(tex)
+
+    if verbose:
+        print(f"plik {fn} gotowy.")
 # end of file loop
 
 # %%
@@ -382,60 +432,4 @@ if verbose:
     print("wygenerowano główny plik tex.")
 
 # %%
-# pyplotting version
-plot_style = {
-    'linewidth': 0.25,
-    }
-nrow = 5
-ncol = 1
 
-fig, axes = plt.subplots(
-    nrow, ncol,
-    gridspec_kw=dict(wspace=0.0, hspace=0.0,
-                     top=1. - 0.5 / (nrow + 1), bottom=0.5 / (nrow + 1),
-                     left=0.5 / (ncol + 1), right=1 - 0.5 / (ncol + 1)),
-    figsize=(21, 7.3),
-    dpi=300,
-    sharex='col',
-    )
-
-Y = (Y-Y.min(0))/(Y.max(0)-Y.min(0))
-axes[0].imshow(
-    Y[:,:,0].transpose(), 
-    cmap='viridis',
-    norm=mpl.colors.Normalize(vmin=Y[:,:,isf].min(), vmax=Y[:,:,isf].max()), 
-    aspect='auto',
-    origin='lower',
-    extent = [0 , len(df)/fs, 1 , 11],
-    interpolation='none',
-    )
-axes[0].set_ylabel("oktawa")
-
-axes[1].plot(df.index.to_numpy()/fs, df['I'], **plot_style)
-axes[1].set_ylabel("I, A")
-
-axes[2].plot(df.index.to_numpy()/fs, df['U'], **plot_style)
-axes[2].set_ylabel("U, V")
-
-lico = plt.imread(os.path.join(path_photo, fn + "lico.jpg"))
-axes[3].imshow(
-    lico,
-    extent = [0 , len(df)/fs, -1 , 1],
-    )
-axes[3].set_ylabel("lico")
-axes[3].set_yticks([])
-axes[3].set_position(mpl.transforms.Bbox([[0.25, 0.27], [0.75, 0.50]]))
-
-gran = plt.imread(os.path.join(path_photo, fn + "gran.jpg"))
-axes[4].imshow(
-    gran, 
-    extent = [0 , len(df)/fs, -1 , 1],
-    )
-axes[4].set_ylabel("grań")
-axes[4].set_yticks([])
-axes[4].set_position(mpl.transforms.Bbox([[0.25, 0.13], [0.75, 0.50]]))
-
-axes[-1].set_xlabel("t, s")
-for ax in axes:
-    ax.grid(axis='x', which='both')
-# %%
