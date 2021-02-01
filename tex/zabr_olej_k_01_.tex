@@ -1,0 +1,127 @@
+
+        \begin{tikzpicture}
+        \begin{groupplot}[
+            group style={
+                group name=pp_stack,
+                group size=1 by 7,
+                xlabels at=edge bottom,
+                xticklabels at=edge bottom,
+                vertical sep=2pt
+            },
+            footnotesize,
+            width=22cm,
+            height=3.8cm,
+            xlabel={czas, s},
+            xmin=0, xmax=47.01388,
+            ymin=0, 
+            tickpos=left,
+            ytick align=outside,
+            xtick align=outside,
+            enlargelimits=false,
+        ]
+        \nextgroupplot[
+            ylabel=kurtoza,
+            ytick={2, 6, 10},
+            yticklabels={63 Hz, 1 kHz,  16 kHz}, 
+            colorbar,
+            colorbar style={
+        point meta min=0,
+        point meta max=1,
+        tickpos=right,
+        colormap name = viridis
+            }
+        ]
+        \addplot graphics [
+        xmin=0, xmax=47.01388,
+            ymin=0, 
+            ymax=10, ] 
+            {zabr_olej_k_01_0.png};
+
+        \nextgroupplot[
+            ylabel=entropia,
+            ytick={2, 6, 10},
+            yticklabels={63 Hz, 1 kHz,  16 kHz},
+        colorbar,
+            colorbar style={
+        point meta min=0,
+        point meta max=1,
+        tickpos=right,
+        ytick={0.2,0.4,0.6,0.8},
+        colormap name = viridis}
+        ]
+        \addplot graphics
+            [xmin=0,xmax=47.01388,
+            ,ymin=0,
+            ymax=10] 
+            {zabr_olej_k_01_1.png};
+
+        \nextgroupplot[
+        ylabel=beta a,
+            ytick={2, 6, 10},
+            yticklabels={63 Hz, 1 kHz,  16 kHz},
+            colorbar,
+            colorbar style={
+        point meta min=0,
+        point meta max=12,
+        tickpos=right,
+        colormap name = viridis}
+        ]
+        \addplot graphics
+            [xmin=0, xmax=47.01388,
+            ,ymin=0
+            ,ymax=10] 
+            {zabr_olej_k_01_2.png};
+
+        \nextgroupplot[
+        ylabel=beta b,
+            ytick={2, 6, 10},
+            yticklabels={63 Hz, 1 kHz,  16 kHz},
+        colorbar,
+            colorbar style={
+        point meta min=0,
+        point meta max=12,
+        tickpos=right,
+        colormap name = viridis}
+        ]
+        \addplot graphics
+            [xmin=0, xmax=47.01388,
+            ymin=0,
+            ymax=10] 
+            {zabr_olej_k_01_3.png};
+
+        \nextgroupplot[
+            ylabel={U, V; {\color{red} I, A} } ,
+        colorbar,
+            colorbar style={
+        point meta min=0,
+        point meta max=1,
+            tickpos=right,
+        ytick={0.2, 0.8},
+        yticklabels={3.0ms, 12.0ms},colormap name = blackwhite},]
+    
+    \addplot graphics
+            [xmin=0, xmax=47.01388,
+            ymin=0,
+            ymax=5.0526] 
+            {zabr_olej_k_01_V.png};
+        \addplot table [col sep=comma, mark=none] {zabr_olej_k_01_I.csv};
+        \nextgroupplot[height=3.869636423190305cm,
+            ylabel={lico},
+            ytick = \empty, ]
+        \addplot graphics  [
+            xmin=0, xmax=47.01388,
+            ymin=0,
+            ymax=10] 
+            {photo/zabr_olej_k_01_lico.jpg};
+            
+        \nextgroupplot[height=4.546153490566038cm,
+            ylabel={gran},
+            ytick = \empty, ]
+        \addplot graphics  [
+            xmin=0, xmax=47.01388,
+            ymin=0,ymax=5] 
+            {photo/zabr_olej_k_01_gran.jpg};
+        
+        \end{groupplot}
+        \end{tikzpicture}
+        
