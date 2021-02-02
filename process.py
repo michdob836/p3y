@@ -13,17 +13,18 @@ import samplerate
 import matplotlib as mpl
 from matplotlib import gridspec
 import matplotlib as mpl
+import os
 
 from PIL import Image
 
 # konfiguracja
 verbose = True
 regen_intermediate=False
-small_run = True # testy tylko na kilku plikach
+small_run = False # testy tylko na kilku plikach
 
 test_files = [
-    #'brak_gaz_k_01_', 
-    #'brak_k_01_',
+    'brak_gaz_k_01_', 
+    'brak_k_01_',
     'zabr_olej_k_01_',
 ]
 
@@ -172,6 +173,7 @@ for fn in files:
     data_np = samplerate.resample(data_np, 0.1, converter_type='sinc_best', verbose=verbose)
     pd.DataFrame(data_np, index=np.linspace(0, len(data_np)/fs/0.02/0.1, len(data_np)) ).to_csv(
         os.path.join(path_texinterm, f"{fn}I.csv"), header=None)
+    I_max = data_np.max()
     
     # generowanie filtrów jako systemów 2. rzędu i filtracja
     X = df['p'].to_numpy()
@@ -206,7 +208,9 @@ for fn in files:
                 Y[iwin, ioct, isf] = (statf[isf])(Xbuf[:, iwin])
 
     # exporting calculated stat data as color mapped matrices
+    Y_minmax = []
     for isf in range(len(statf)):
+        Y_minmax.append( (Y[:,:,isf].min(), Y[:,:,isf].max()) )
         if not isf == 1:
             Y[:,:,isf] = (Y[:,:,isf]-Y[:,:,isf].min(0))/(Y[:,:,isf].max(0)-Y[:,:,isf].min(0))
         mpl.image.imsave(os.path.join(path_texinterm, f"{fn}{isf}.png"), np.flipud(Y[:,:,isf].transpose()), cmap='viridis' )
@@ -215,10 +219,24 @@ for fn in files:
     if verbose:
         print("generuję plik wejściowy tex")
     xmax = len(X) / fs
-    plot_width_cm = 22
+    plot_width_cm = 23
 
     tex = ""
     tex += r'''
+        \documentclass{article} 
+        \usepackage[utf8]{inputenc}
+        \usepackage[a4paper, margin=2cm]{geometry}
+        \usepackage{pgfplots}
+        \pgfplotsset{compat=1.17}
+        \usetikzlibrary{pgfplots.groupplots}
+        \usepackage{pdflscape}
+        \usepackage{xcolor}
+        \pgfplotsset{
+            colormap={blackwhite}{gray(0cm)=(1);gray(1cm)=(0)}
+        }
+
+        \begin{document}
+        \begin{landscape}
         \begin{tikzpicture}
         \begin{groupplot}[
             group style={
@@ -232,7 +250,7 @@ for fn in files:
             '''
     tex += f'width={plot_width_cm}cm,'
     tex += r'''
-            height=3.8cm,
+            height=3.65cm,
             xlabel={czas, s},
             xmin=0,'''
     tex += f' xmax={xmax},'
@@ -249,10 +267,19 @@ for fn in files:
             yticklabels={63 Hz, 1 kHz,  16 kHz}, 
             colorbar,
             colorbar style={
-        point meta min=0,
-        point meta max=1,
+        '''
+    tex += f' point meta min={round(Y_minmax[0][0], 2)},'
+    tex += r'''
+        '''
+    tex += f' point meta max={round(Y_minmax[0][1], 2)},'
+    tex += r'''
         tickpos=right,
-        colormap name = viridis
+        colormap name = viridis,
+	y tick scale label style={
+    		at={(yticklabel* cs:1, 20)},
+    		yshift=-9pt,
+    		anchor=near yticklabel,
+	},
             }
         ]
         \addplot graphics [
@@ -275,7 +302,12 @@ for fn in files:
         point meta max=1,
         tickpos=right,
         ytick={0.2,0.4,0.6,0.8},
-        colormap name = viridis}
+        colormap name = viridis,
+	y tick scale label style={
+    		at={(yticklabel* cs:1, 20)},
+    		yshift=-9pt,
+    		anchor=near yticklabel,
+	},}
         ]
         \addplot graphics
             [xmin=0,'''
@@ -293,10 +325,19 @@ for fn in files:
             yticklabels={63 Hz, 1 kHz,  16 kHz},
             colorbar,
             colorbar style={
-        point meta min=0,
-        point meta max=12,
+         '''
+    tex += f' point meta min={round(Y_minmax[2][0], 2)},'
+    tex += r'''
+        '''
+    tex += f' point meta max={round(Y_minmax[2][1], 2)},'
+    tex += r'''
         tickpos=right,
-        colormap name = viridis}
+        colormap name = viridis,
+	y tick scale label style={
+    		at={(yticklabel* cs:1, 20)},
+    		yshift=-9pt,
+    		anchor=near yticklabel,
+	},}
         ]
         \addplot graphics
             [xmin=0,'''
@@ -314,10 +355,19 @@ for fn in files:
             yticklabels={63 Hz, 1 kHz,  16 kHz},
         colorbar,
             colorbar style={
-        point meta min=0,
-        point meta max=12,
+        '''
+    tex += f' point meta min={round(Y_minmax[3][0], 2)},'
+    tex += r'''
+        '''
+    tex += f' point meta max={round(Y_minmax[3][1], 2)},'
+    tex += r'''
         tickpos=right,
-        colormap name = viridis}
+        colormap name = viridis,
+	y tick scale label style={
+    		at={(yticklabel* cs:1, 20)},
+    		yshift=-9pt,
+    		anchor=near yticklabel,
+	},}
         ]
         \addplot graphics
             [xmin=0,'''
@@ -339,14 +389,21 @@ for fn in files:
         ytick={0.2, 0.8},
         '''
     tex += f'yticklabels={{{round(0.2*V_hist_plot_max_intensity_ms, 1)}ms, {round(0.8*V_hist_plot_max_intensity_ms, 1)}ms}},'
-    tex += r'''colormap name = blackwhite},]
+    tex += r'''colormap name = blackwhite},
+	y tick scale label style={
+    		at={(yticklabel* cs:1, 20)},
+    		yshift=-9pt,
+    		anchor=near yticklabel,
+	},]
     
     \addplot graphics
             [xmin=0,'''
     tex += f' xmax={xmax},'
     tex += r'''
             ymin=0,
-            ymax=5.0526] 
+            '''
+    tex += f' ymax={max([histminmax[1], I_max])},'
+    tex += r'''] 
             {'''
     tex += f'{os.path.join(path_texinput, fn + "V.png")}'
     tex += r'''};
@@ -367,10 +424,14 @@ for fn in files:
             ylabel={lico},
             ytick = \empty, ]
         \addplot graphics  [
-            xmin=0, xmax=47.01388,
+            xmin=0, '''
+    tex += f' xmax={xmax},'
+    tex += r'''
             ymin=0,
-            ymax=10] 
-            {photo/zabr_olej_k_01_lico.jpg};
+            ymax=1] 
+            {photo/'''
+    tex += fn
+    tex += r'''lico.jpg};
             
         \nextgroupplot['''
     image_ax_height = 0
@@ -382,14 +443,21 @@ for fn in files:
             ylabel={gran},
             ytick = \empty, ]
         \addplot graphics  [
-            xmin=0, xmax=47.01388,
-            ymin=0,ymax=5] 
-            {photo/zabr_olej_k_01_gran.jpg};
+            xmin=0,'''
+    tex += f' xmax={xmax},'
+    tex += r'''
+            ymin=0,ymax=1] 
+            {photo/'''
+    tex += fn
+    tex += r'''gran.jpg};
         '''
 
     tex += r'''
         \end{groupplot}
         \end{tikzpicture}
+
+        \end{landscape}
+        \end{document}
         '''
 
 
@@ -397,8 +465,21 @@ for fn in files:
         texfile.write(tex)
 
     if verbose:
-        print(f"plik {fn} gotowy.")
+        print(f"plik {fn}.tex gotowy. kompiluję...")
+
+    o=os.popen(r'''pdflatex.exe -include-directory=C:\Users\m_dobrut\Documents\shared\p3y\tex ''' + fn +'.tex').read()
+
+    if verbose:
+        print(o)
+        
+    print(f'wygenerowano {fn}.pdf')
+    
+
 # end of file loop
+
+# %%
+
+
 
 # %%
 # generowanie głownego pliku tex 
