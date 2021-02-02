@@ -1,0 +1,169 @@
+
+        \documentclass{article} 
+        \usepackage[utf8]{inputenc}
+        \usepackage[a4paper, margin=2cm]{geometry}
+        \usepackage{pgfplots}
+        \pgfplotsset{compat=1.17}
+        \usetikzlibrary{pgfplots.groupplots}
+        \usepackage{pdflscape}
+        \usepackage{xcolor}
+        \pgfplotsset{
+            colormap={blackwhite}{gray(0cm)=(1);gray(1cm)=(0)}
+        }
+
+        \begin{document}
+        \begin{landscape}
+        \begin{tikzpicture}
+        \begin{groupplot}[
+            group style={
+                group name=pp_stack,
+                group size=1 by 7,
+                xlabels at=edge bottom,
+                xticklabels at=edge bottom,
+                vertical sep=2pt
+            },
+            footnotesize,
+            width=23cm,
+            height=3.65cm,
+            xlabel={czas, s},
+            xmin=0, xmax=42.00856,
+            ymin=0, 
+            tickpos=left,
+            ytick align=outside,
+            xtick align=outside,
+            enlargelimits=false,
+        ]
+        \nextgroupplot[
+            ylabel=kurtoza,
+            ytick={2, 6, 10},
+            yticklabels={63 Hz, 1 kHz,  16 kHz}, 
+            colorbar,
+            colorbar style={
+         point meta min=-1.73,
+         point meta max=315.73,
+        tickpos=right,
+        colormap name = viridis,
+	y tick scale label style={
+    		at={(yticklabel* cs:1, 20)},
+    		yshift=-9pt,
+    		anchor=near yticklabel,
+	},
+            }
+        ]
+        \addplot graphics [
+        xmin=0, xmax=42.00856,
+            ymin=0, 
+            ymax=10, ] 
+            {zuz_rolki_k_01_0.png};
+
+        \nextgroupplot[
+            ylabel=entropia,
+            ytick={2, 6, 10},
+            yticklabels={63 Hz, 1 kHz,  16 kHz},
+        colorbar,
+            colorbar style={
+        point meta min=0,
+        point meta max=1,
+        tickpos=right,
+        ytick={0.2,0.4,0.6,0.8},
+        colormap name = viridis,
+	y tick scale label style={
+    		at={(yticklabel* cs:1, 20)},
+    		yshift=-9pt,
+    		anchor=near yticklabel,
+	},}
+        ]
+        \addplot graphics
+            [xmin=0,xmax=42.00856,
+            ,ymin=0,
+            ymax=10] 
+            {zuz_rolki_k_01_1.png};
+
+        \nextgroupplot[
+        ylabel=beta a,
+            ytick={2, 6, 10},
+            yticklabels={63 Hz, 1 kHz,  16 kHz},
+            colorbar,
+            colorbar style={
+          point meta min=-0.0,
+         point meta max=20.97,
+        tickpos=right,
+        colormap name = viridis,
+	y tick scale label style={
+    		at={(yticklabel* cs:1, 20)},
+    		yshift=-9pt,
+    		anchor=near yticklabel,
+	},}
+        ]
+        \addplot graphics
+            [xmin=0, xmax=42.00856,
+            ,ymin=0
+            ,ymax=10] 
+            {zuz_rolki_k_01_2.png};
+
+        \nextgroupplot[
+        ylabel=beta b,
+            ytick={2, 6, 10},
+            yticklabels={63 Hz, 1 kHz,  16 kHz},
+        colorbar,
+            colorbar style={
+         point meta min=-1123890.37,
+         point meta max=1665709.11,
+        tickpos=right,
+        colormap name = viridis,
+	y tick scale label style={
+    		at={(yticklabel* cs:1, 20)},
+    		yshift=-9pt,
+    		anchor=near yticklabel,
+	},}
+        ]
+        \addplot graphics
+            [xmin=0, xmax=42.00856,
+            ymin=0,
+            ymax=10] 
+            {zuz_rolki_k_01_3.png};
+
+        \nextgroupplot[
+            ylabel={U, V; {\color{red} I, A} } ,
+        colorbar,
+            colorbar style={
+        point meta min=0,
+        point meta max=1,
+            tickpos=right,
+        ytick={0.2, 0.8},
+        yticklabels={6.1ms, 24.6ms},colormap name = blackwhite},
+	y tick scale label style={
+    		at={(yticklabel* cs:1, 20)},
+    		yshift=-9pt,
+    		anchor=near yticklabel,
+	},]
+    
+    \addplot graphics
+            [xmin=0, xmax=42.00856,
+            ymin=0,
+             ymax=5.084997653961182,] 
+            {zuz_rolki_k_01_V.png};
+        \addplot table [col sep=comma, mark=none] {zuz_rolki_k_01_I.csv};
+        \nextgroupplot[height=2.584911518162061cm,
+            ylabel={lico},
+            ytick = \empty, ]
+        \addplot graphics  [
+            xmin=0,  xmax=42.00856,
+            ymin=0,
+            ymax=1] 
+            {photo/zuz_rolki_k_01_lico.jpg};
+            
+        \nextgroupplot[height=3.7109563647918655cm,
+            ylabel={gran},
+            ytick = \empty, ]
+        \addplot graphics  [
+            xmin=0, xmax=42.00856,
+            ymin=0,ymax=1] 
+            {photo/zuz_rolki_k_01_gran.jpg};
+        
+        \end{groupplot}
+        \end{tikzpicture}
+
+        \end{landscape}
+        \end{document}
+        

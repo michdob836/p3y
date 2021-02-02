@@ -1,4 +1,18 @@
 
+        \documentclass{article} 
+        \usepackage[utf8]{inputenc}
+        \usepackage[a4paper, margin=2cm]{geometry}
+        \usepackage{pgfplots}
+        \pgfplotsset{compat=1.17}
+        \usetikzlibrary{pgfplots.groupplots}
+        \usepackage{pdflscape}
+        \usepackage{xcolor}
+        \pgfplotsset{
+            colormap={blackwhite}{gray(0cm)=(1);gray(1cm)=(0)}
+        }
+
+        \begin{document}
+        \begin{landscape}
         \begin{tikzpicture}
         \begin{groupplot}[
             group style={
@@ -9,8 +23,8 @@
                 vertical sep=2pt
             },
             footnotesize,
-            width=22cm,
-            height=3.8cm,
+            width=23cm,
+            height=3.65cm,
             xlabel={czas, s},
             xmin=0, xmax=47.01388,
             ymin=0, 
@@ -25,10 +39,15 @@
             yticklabels={63 Hz, 1 kHz,  16 kHz}, 
             colorbar,
             colorbar style={
-        point meta min=0,
-        point meta max=1,
+         point meta min=-1.71,
+         point meta max=398.69,
         tickpos=right,
-        colormap name = viridis
+        colormap name = viridis,
+	y tick scale label style={
+    		at={(yticklabel* cs:1, 20)},
+    		yshift=-9pt,
+    		anchor=near yticklabel,
+	},
             }
         ]
         \addplot graphics [
@@ -47,7 +66,12 @@
         point meta max=1,
         tickpos=right,
         ytick={0.2,0.4,0.6,0.8},
-        colormap name = viridis}
+        colormap name = viridis,
+	y tick scale label style={
+    		at={(yticklabel* cs:1, 20)},
+    		yshift=-9pt,
+    		anchor=near yticklabel,
+	},}
         ]
         \addplot graphics
             [xmin=0,xmax=47.01388,
@@ -61,10 +85,15 @@
             yticklabels={63 Hz, 1 kHz,  16 kHz},
             colorbar,
             colorbar style={
-        point meta min=0,
-        point meta max=12,
+          point meta min=-0.0,
+         point meta max=41.89,
         tickpos=right,
-        colormap name = viridis}
+        colormap name = viridis,
+	y tick scale label style={
+    		at={(yticklabel* cs:1, 20)},
+    		yshift=-9pt,
+    		anchor=near yticklabel,
+	},}
         ]
         \addplot graphics
             [xmin=0, xmax=47.01388,
@@ -78,10 +107,15 @@
             yticklabels={63 Hz, 1 kHz,  16 kHz},
         colorbar,
             colorbar style={
-        point meta min=0,
-        point meta max=12,
+         point meta min=-1691794.65,
+         point meta max=2444282.46,
         tickpos=right,
-        colormap name = viridis}
+        colormap name = viridis,
+	y tick scale label style={
+    		at={(yticklabel* cs:1, 20)},
+    		yshift=-9pt,
+    		anchor=near yticklabel,
+	},}
         ]
         \addplot graphics
             [xmin=0, xmax=47.01388,
@@ -97,21 +131,26 @@
         point meta max=1,
             tickpos=right,
         ytick={0.2, 0.8},
-        yticklabels={3.0ms, 12.0ms},colormap name = blackwhite},]
+        yticklabels={3.1ms, 12.3ms},colormap name = blackwhite},
+	y tick scale label style={
+    		at={(yticklabel* cs:1, 20)},
+    		yshift=-9pt,
+    		anchor=near yticklabel,
+	},]
     
     \addplot graphics
             [xmin=0, xmax=47.01388,
             ymin=0,
-            ymax=5.0526] 
+             ymax=5.052659511566162,] 
             {zabr_olej_k_01_V.png};
         \addplot table [col sep=comma, mark=none] {zabr_olej_k_01_I.csv};
-        \nextgroupplot[height=3.869636423190305cm,
+        \nextgroupplot[height=4.045528987880773cm,
             ylabel={lico},
             ytick = \empty, ]
         \addplot graphics  [
-            xmin=0, xmax=47.01388,
+            xmin=0,  xmax=47.01388,
             ymin=0,
-            ymax=10] 
+            ymax=1] 
             {photo/zabr_olej_k_01_lico.jpg};
             
         \nextgroupplot[height=4.546153490566038cm,
@@ -119,9 +158,12 @@
             ytick = \empty, ]
         \addplot graphics  [
             xmin=0, xmax=47.01388,
-            ymin=0,ymax=5] 
+            ymin=0,ymax=1] 
             {photo/zabr_olej_k_01_gran.jpg};
         
         \end{groupplot}
         \end{tikzpicture}
+
+        \end{landscape}
+        \end{document}
         
