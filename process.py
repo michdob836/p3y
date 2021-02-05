@@ -120,7 +120,7 @@ if small_run:
     files = test_files
 else:
     (_, _,  files) = next(walk(path_data))
-    files = [re.split('0[0-4]', f)[0] for f in files]
+    files = [re.split('[0-4].txt$', f)[0] for f in files]
     files = list(set(files))
 #%%
 
@@ -485,25 +485,18 @@ for fn in files:
 # generowanie głownego pliku tex 
 
 main_tex = r'''\documentclass{article} 
-\usepackage[utf8]{inputenc}
+\usepackage[utf8]{inputenc} 
 \usepackage[a4paper, margin=2cm]{geometry}
-\usepackage{pgfplots}
-\pgfplotsset{compat=1.5}
-\usetikzlibrary{pgfplots.groupplots}
 \usepackage{pdflscape}
-\usepackage{xcolor}
-\pgfplotsset{
-	colormap={blackwhite}{gray(0cm)=(1);gray(1cm)=(0)}
-}
+\usepackage{pdfpages}
 
 \begin{document}
-\begin{landscape}
 '''
 for fn in files:
-    main_tex += "\t" + r"\input{" + fn + r".tex}" + "\n"
+    main_tex += "\t" + r"\includepdf[landscape=true]{" + fn + r".pdf}" + "\n"
     
 main_tex += r'''
-\end{landscape}
+
 \end{document}
 '''
 with open(os.path.join(path_tex, "main.tex"), "w") as main_tex_file:
@@ -511,6 +504,11 @@ with open(os.path.join(path_tex, "main.tex"), "w") as main_tex_file:
 
 if verbose:
     print("wygenerowano główny plik tex.")
+
+o=os.popen(r'''pdflatex.exe -include-directory=C:\Users\m_dobrut\Documents\shared\p3y\tex ''' +'main.tex').read()
+
+if verbose:
+    print(o)
 
 # %%
 
