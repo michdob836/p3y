@@ -3,6 +3,10 @@ data/RAW/
 data/old/
 data/bak/
 
+#auxy i inne tymczasowe/pośrednie pliki
+tex/auxy/
+tex/*.pdf
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
