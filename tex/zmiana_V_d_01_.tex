@@ -1,7 +1,7 @@
 
         \documentclass{article} 
         \usepackage[utf8]{inputenc}
-        \usepackage[a4paper, margin=2cm]{geometry}
+        \usepackage[a4paper, margin=1.5cm]{geometry}
         \usepackage{pgfplots}
         \pgfplotsset{compat=1.17}
         \usetikzlibrary{pgfplots.groupplots}
@@ -85,8 +85,8 @@
             yticklabels={63 Hz, 1 kHz,  16 kHz},
             colorbar,
             colorbar style={
-          point meta min=nan,
-         point meta max=nan,
+          point meta min=-0.0,
+         point meta max=32.97,
         tickpos=right,
         colormap name = viridis,
 	y tick scale label style={
@@ -107,8 +107,8 @@
             yticklabels={63 Hz, 1 kHz,  16 kHz},
         colorbar,
             colorbar style={
-         point meta min=nan,
-         point meta max=nan,
+         point meta min=-2743698.29,
+         point meta max=1198670.74,
         tickpos=right,
         colormap name = viridis,
 	y tick scale label style={

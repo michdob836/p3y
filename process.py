@@ -23,9 +23,10 @@ regen_intermediate=False
 small_run = False # testy tylko na kilku plikach
 
 test_files = [
-    'brak_gaz_k_01_', 
-    'brak_k_01_',
-    'zabr_olej_k_01_',
+    # 'brak_gaz_k_01_', 
+    # 'brak_k_01_',
+    # 'zabr_olej_k_01_',
+    'zmiana_U_d_01_',
 ]
 
 path_data = r".\data\RAW"
@@ -65,12 +66,18 @@ def entropy(X, lower=-1, upper=1, nbins=2048):
 def beta_a(w):
     m = w.mean()
     v = w.var()
-    return (m * (1 - m) / v - 1) * m
+    if m == 0 and v == 0:
+        return 0
+    else:
+        return (m * (1 - m) / v - 1) * m
 
 def beta_b(w):
     m = w.mean()
     v = w.var()
-    return (m * (1 - m) / v - 1) * (1 - m)
+    if m == 0 and v == 0:
+        return 0
+    else:
+        return (m * (1 - m) / v - 1) * (1 - m)
 
 # definicje funkcji
 def _showfilter(sos, freq, fs, ax):
@@ -82,7 +89,8 @@ def _showfilter(sos, freq, fs, ax):
         sos,
         worN=wn,
         whole=False,
-        fs=fs)
+        fs=fs
+    )
 
     ax.semilogx(w, 20 * np.log10(abs(h) + np.finfo(float).eps), 'b')
     ax.grid(which='major')
@@ -206,6 +214,7 @@ for fn in files:
         for isf in range(len(statf)):
             for iwin in range(m):
                 Y[iwin, ioct, isf] = (statf[isf])(Xbuf[:, iwin])
+            plt.plot( Y[:, ioct, isf])
 
     # exporting calculated stat data as color mapped matrices
     Y_minmax = []
@@ -225,7 +234,7 @@ for fn in files:
     tex += r'''
         \documentclass{article} 
         \usepackage[utf8]{inputenc}
-        \usepackage[a4paper, margin=2cm]{geometry}
+        \usepackage[a4paper, margin=1.5cm]{geometry}
         \usepackage{pgfplots}
         \pgfplotsset{compat=1.17}
         \usetikzlibrary{pgfplots.groupplots}
@@ -467,7 +476,7 @@ for fn in files:
     if verbose:
         print(f"plik {fn}.tex gotowy. kompiluję...")
 
-    o=os.popen(r'''pdflatex.exe -include-directory=C:\Users\m_dobrut\Documents\shared\p3y\tex ''' + fn +'.tex').read()
+    o=os.popen(r'''pdflatex.exe -output-directory=.\tex\ -aux-directory=.\tex\auxy -include-directory=.\tex ''' + fn +'.tex').read()
 
     if verbose:
         print(o)
@@ -505,10 +514,10 @@ with open(os.path.join(path_tex, "main.tex"), "w") as main_tex_file:
 if verbose:
     print("wygenerowano główny plik tex.")
 
-o=os.popen(r'''pdflatex.exe -include-directory=C:\Users\m_dobrut\Documents\shared\p3y\tex ''' +'main.tex').read()
+tex_log = os.popen(r'''pdflatex.exe -aux-directory=.\tex\auxy -include-directory=.\tex ''' +'main.tex').read()
 
 if verbose:
-    print(o)
+    print(tex_log)
 
 # %%
 
