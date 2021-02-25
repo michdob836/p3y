@@ -19,14 +19,15 @@ from PIL import Image
 
 # konfiguracja
 verbose = True
-regen_intermediate=False
+regen_intermediate = False
 small_run = False # testy tylko na kilku plikach
 
 test_files = [
     # 'brak_gaz_k_01_', 
-    # 'brak_k_01_',
+    #'brak_k_01_',
     # 'zabr_olej_k_01_',
-    'zmiana_U_d_01_',
+    # 'zmiana_U_d_01_',
+    'korozja_drut_k_02_'
 ]
 
 path_data = r".\data\RAW"
@@ -45,8 +46,8 @@ obcfreq = [16, 31.5, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]
 fs_raw = 250e+3
 fs = 50e+3
 resample_ratio = fs/fs_raw
-ws = 2048 # szerokoś okna w samplach
-ol = 0.25 # zakładka okna <0:1)
+ws = 8192 # szerokoś okna w samplach
+ol = 0.5 # zakładka okna <0:1)
 
 statf = [
     lambda w: kurtosis(w), # kurt
@@ -64,20 +65,30 @@ def entropy(X, lower=-1, upper=1, nbins=2048):
     return - np.sum(np.nan_to_num(Xhist * np.log10(Xhist)))
 
 def beta_a(w):
+    w = (w-w.min(0))/(w.max(0)-w.min(0))
     m = w.mean()
     v = w.var()
     if m == 0 and v == 0:
         return 0
     else:
-        return (m * (1 - m) / v - 1) * m
+        a = (m * (1 - m) / v - 1) * m
+        if np.isnan(a):
+            return 0
+        else:
+            return a
 
 def beta_b(w):
+    w = (w-w.min(0))/(w.max(0)-w.min(0))
     m = w.mean()
     v = w.var()
     if m == 0 and v == 0:
         return 0
     else:
-        return (m * (1 - m) / v - 1) * (1 - m)
+        b = (m * (1 - m) / v - 1) * (1 - m)
+        if np.isnan(b):
+            return 0
+        else:
+            return b
 
 # definicje funkcji
 def _showfilter(sos, freq, fs, ax):
@@ -106,7 +117,7 @@ def _showfilter(sos, freq, fs, ax):
 
 
 def buffer(X = np.array([]), n = 1, p = 0):
-    # function from https://stackoverflow.com/a/57491913
+    # based on function from https://stackoverflow.com/a/57491913
     #buffers data vector X into length n column vectors with overlap p
     #excess data at the end of X is discarded
     n = int(n) #length of each data vector
@@ -173,7 +184,7 @@ for fn in files:
         Vhist[:, i], _ = np.histogram(Vbuf[:,i], bins=nbins, range=histminmax)
     V_hist_plot_max_intensity_ms = Vhist.max() / fs * 1000 * (1-ol)
     Vhist = (Vhist-Vhist.min(0))/(Vhist.max(0)-Vhist.min(0))
-    mpl.image.imsave(os.path.join(path_texinterm, f"{fn}V.png"), np.flipud(Vhist), cmap='gray_r' )
+    mpl.image.imsave(os.path.join(path_texinterm, f"{fn}V.png"), np.flipud(Vhist), cmap='gray_r')
 
     # downsampling prądu aby dało się go odczytać na wykresie
     data_np = df['I'].to_numpy()
@@ -214,8 +225,9 @@ for fn in files:
         for isf in range(len(statf)):
             for iwin in range(m):
                 Y[iwin, ioct, isf] = (statf[isf])(Xbuf[:, iwin])
-            plt.plot( Y[:, ioct, isf])
-
+                if np.isnan(Y[iwin, ioct, isf]):
+                    print(f'w: {iwin}, oct: {ioct} \n {Xbuf[:, iwin]}')
+          
     # exporting calculated stat data as color mapped matrices
     Y_minmax = []
     for isf in range(len(statf)):
@@ -243,7 +255,7 @@ for fn in files:
         \pgfplotsset{
             colormap={blackwhite}{gray(0cm)=(1);gray(1cm)=(0)}
         }
-
+        \pagestyle{empty} 
         \begin{document}
         \begin{landscape}
         \begin{tikzpicture}
@@ -498,6 +510,7 @@ main_tex = r'''\documentclass{article}
 \usepackage[a4paper, margin=2cm]{geometry}
 \usepackage{pdflscape}
 \usepackage{pdfpages}
+\pagestyle{empty} 
 
 \begin{document}
 '''

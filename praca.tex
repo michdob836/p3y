@@ -1,0 +1,304 @@
+\documentclass{mwart}
+\usepackage[utf8]{inputenc}
+\usepackage[MeX]{polski}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{pdflscape}
+\usepackage{pdfpages}
+
+\title{Metody analizy sygnałów akustycznych generowanych podczas procesu spawania}
+\author{Michał Dobrut}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Metody spawania} 
+Historia rozwoju praktycznych prac nad spawaniem sięga rewolucji przemysłowej, która opierała się w dużej mierze na wzroście kontroli nad procesami przetwarzania i łączenia metalu. Gwałtowny rozwój spawalnictwa zaczął podczas II Wojny Światowej ze względu na potrzeby wojskowe, a największe przełomy dokonały się w latach 1960-1970. Współcześnie wielkoskalowa produkcja wymaga głębokiej automatyzacji metod wytwarzanie wysokiej jakości połączeń elementów metalowych. Poniżej przybliżone (za \cite{naidu_modeling_2003}) są najpopularniejsze metody spawania wraz z podaniem funkcjonujących w literaturze skrótów i kodów.
+\begin{enumerate}
+    \item Spawanie elektrodami otulonymi (SMAW, MMA, met. 111) jest to proces spawanie łukowego w którym łuk utrzymywany między czubkiem elektrody pokrytej warstwą topnika a powierzchnią spawanego materiału generuje ciepło wystarczające do wytworzenia trwałego połączenia z wykorzystaniem dodawanego metalu z elektrody.
+    \item Spawanie łukowe elektrodą nietopliwą w osłonie gazów obojętnych (GTAW, TIG, met. 141) jest procesem w którym do dostarczenia ciepła wykorzystywany jest łuk w osłonie gazowej pomiędzy trwałą, wolframową elektrodą a materiałem.
+    \item Spawanie łukowe elektrodą topliwą w osłonie gazowej (Gas Metal Arc Welding (GMAW), MIG/MAG, met. 131/135) wykorzystuje łuk pomiędzy materiałem a wysuwanym na bieżąco drutem. Wyróżnia się 2 podgrupy metody w zależności od gazu osłonowego: Metal Active Gas dla CO$_2$ lub mieszaniny CO$_2$ z argonem i Metal Inert Gas dla argonu, helu lub mieszaniny.
+    \item Spawanie drutem rdzeniowym (FCAW) jest procesem podobnym do GMAW, ale tu topnik znajduje się wewnątrz elektrody o kołowym przekroju. Może występować z dodatkową zewnętrzną osłoną gazową.
+    \item Spawanie łukiem krytym (SAW) jest bardzo wydajną metodą w której łuk wytwarzany jest pomiędzy rozwijaną elektrodą (lub wieloma) a materiałem spawanym, przy czym łuk i jeziorko stopionego metalu są przykryte warstwą sypkiego topnika.
+    \item Spawanie elektrogazowe (EGW) jest zautomatyzowanym procesem wykorzystywanym w konstrukcjach większej skali, gdzie rozwijane elektrody, o jednolitym przekroju lub z rdzeniem z topnika topią się dzięki utrzymaniu łuku z łączonymi powierzchniami, i wypełniają metalem przestrzeń pomiędzy chłodzonym ogranicznikami.
+    \item Spawanie plazmowe (PAW) to proces, w którym łuk jest wytwarzany między materiałem spawanym a stałą elektrodą, schowaną w specjalnie ukształtowanej dyszy, ogniskującej strumień gazu w obszarze łuku. Może być wykorzystywane bez dodatkowego materiału wypełniającego.
+\end{enumerate}
+
+\section{Metoda GMAW}
+\subsection{Opis metody}
+Spawanie elektrodą topliwą w osłonie gazowej polega na ciągłym dodawaniu materiału pochodzącego z elektrody, odpowiedzialnej za wytwarzanie koniecznego ciepła, do jeziorka (rys. \ref{fig:schemat_gmaw}). 
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{GMAW_weld_area.png}
+    \caption{Schemat spawania GMAW. 1 - kierunek spawania, 2 - końcówka prądowa, 3 – elektroda, 4 – gaz osłonowy, 5 – jeziorko,  6 - spoina, 7 – spawany materiał {\scriptsize Autor: Nathaniel C. Sheetz, \url{https://commons.wikimedia.org/wiki/File:GMAW_weld_area.png}}}
+    \label{fig:schemat_gmaw}
+\end{figure}
+Stosuje się różne kombinacje gazów osłonowych, w tym najpopularniejsze:
+\begin{itemize}
+    \item czysty argon,
+    \item 75/25\% lub 80/20\% argon-CO$_2$,
+    \item argon + do 5\% tlenu dla spawania z dużymi prędkościami,
+    \item 90\% He + 7.5\% Ar + 2.5\% CO$_2$ dla stali nierdzewnych.
+\end{itemize}
+Proces spawania GMAW charakteryzuje się dużą wydajnością i stosunkowo niskimi kosztami pracy oraz wymaga od spawacza umiarkowanych umiejętności. To przyczyniło się do jej szerokiego wykorzystania w warunkach produkcyjnych. Dobrze nadaje się do automatyzacji z użyciem robotów przemysłowych. Można nią łączyć szeroki zakres materiałów, w tym:
+\begin{itemize}
+    \item stal węglową,
+    \item stal nierdzewną,
+    \item stopy aluminum,
+    \item stopy magnezu,
+    \item miedź, brąz krzemowy,
+    \item nikiel.
+\end{itemize}
+W przypadku transportu zwarciowego metoda jest ograniczona do cieńszych materiałów ale pozwala na spawanie w każdej pozycji. Transport natryskowy dostarcza większych ilości ciepła, ale ogranicza pozycję do podolnej. Metoda pulsacyjna eliminuje te wady, zmniejszając niestabilności łuku poprzez wprowadzenie wymuszonych oscylacji w proces, lecz wymaga bardziej zaawansowanego technologicznie sprzętu.    
+
+\subsection{Transport materiału dodatkowego do jeziorka spawalniczego w procesie GMAW}
+Można wyróżnić następujące sposoby transportu materiału elektrody do jeziorka spawalniczego\cite{naidu_modeling_2003,norrish_gas_2006, mizerski_spawanie_2013}:
+
+\begin{enumerate}
+    \item zwarciowy, zanurzeniowy (\emph{short-circuiting, dip}),
+    \item lotny (\emph{free-flight}), w tym:
+    \begin{enumerate}
+        \item kropelkowy (\emph{globular}),
+        \item natryskowy (\emph{spray}),
+        \item strumieniowy (\emph{streaming}),
+    \end{enumerate}
+    \item pulsacyjny.
+\end{enumerate}
+
+Ich występowanie zależy od parametrów procesu spawania, przede wszystkim średnicy i materiału elektrody, szybkości posuwu drutu oraz prądu spawania. \cite{nadzam_gas_2014}
+
+    \subsubsection{Transport zanurzeniowy}
+    Gdy prędkość posuwu drutu jest wysoka, ciepło wytwarzane przez łuk nie jest wystarczające do stopienia drutu, przez co wchodzi on okresowo w kontakt z jeziorkiem. Następuje chwilowe zwarcie, prąd skacze do wartości zadanego ograniczenia, fragment drutu w pobliżu jeziorka jest stapiany i powraca łuk. Częstotliwość oscylacji wynosi 20-200~Hz, czas zwarcia kilka (ok.~4)~ms dla typowych parametrów.
+    
+    \subsubsection{Transport kropelkowy}
+    Charakteryzuje się przekazywaniem materiału przez krople o~średnicy większej niż średnica elektrody i~częstotliwości spadania kropli rzędu kilku~Hz. Występuje przy średnich prądach wyższych niż w~transporcie zwarciowym, wystarczających do wydzielania w~łuku ciepła pozwalającego na bieżąco topić drut. 
+    
+    \subsubsection{Transport natryskowy}
+    Prąd jeszcze wyższy niż w transporcie kropelkowym powoduje szybkie topienie materiału elektrody, który, w postaci kropli o średnicy zbliżonej do średnicy elektrody, jest wypychany przy znaczącym udziale sił elektromagnetycznych w stronę jeziorka. Dzięki temu możliwe jest spawanie w dowolnych pozycjach\cite{naidu_modeling_2003}. Występuje charakterystyczny kształt przetopu spoiny, z większym wtopieniem na osi ruchu rozpędzonego materiału elektrody.
+    
+    \subsubsection{Transport strumieniowych}
+    Dla cienkich drutów o wysokim oporze i~prądach spawania wyższych niż dla transportu natryskowego obserwuje się strumień kropli o~średnicy mniejszej niż średnica elektrody i~powstawanie stożkowego zakończenia elektrody. Wysoka prędkość kropli nadawana przez siły elektromagnetyczne może powodować intensywny ruch w jeziorku i wprowadzenie pęcherzyków gazu\cite{norrish_gas_2006}.
+    
+    \subsubsection{Transport pulsacyjny}
+    Na granicy pomiędzy transportem kropelkowym a natryskowym może ustalić się chwiejny stan równowagi charakteryzujący się małymi rozpryskami i~dużą wydajnością pracy\cite{norrish_gas_2006}. Stan ten wymaga precyzyjnego zasilania, jednak może wymuszony sztucznie poprzez pulsacyjną zmianę napięcia pomiędzy poziomami charakterystycznymi dla transportu kropelkowego (jako baza) i~natryskowego\cite{naidu_modeling_2003}.
+
+
+\section{Opis fizyczny dźwięku}
+Dźwięk jest poprzeczną falą mechaniczną rozchodzącą się w sprężystym ośrodku, nie zmieniając jego średniego przemieszczenia. Można go opisać kinematycznie jako formę względnych przemieszczeń cząsteczek ośrodka, czyli jako rodzaj zaburzenia, o określonym kierunku i prędkości przemieszczania się \cite{fahy_sound_2007}.
+Podstawowymi pojęciami dla opisu dźwięku są\cite{sen_acoustics_nodate}:
+\begin{itemize}
+    \item \textbf{Okres $T$.} Czas pełnego cyklu oscylacji.
+    \item \textbf{Częstotliwość $f$.} Liczba oscylacji punktu ośrodka sprężystego względem jego położenia średniego na sekundę.
+    \item \textbf{Amplituda $A$.} Maksymalne odchylenie od średniej wartości położenia, lub odchylenie wartości ciśnienia od ciśnienia średniego, oznaczana jako P.
+    \item \textbf{Faza $\varphi$.} Stan położenia punktu ośrodka w czasie i przestrzeni względem punktu odniesienia.
+    \item \textbf{Prędkość dźwięku $\nu$.} Szybkość rozchodzenia się fali w ośrodku.
+    \item \textbf{Długość fali $\lambda$.} Odległość jaką przebywa fala w kierunku propagacji w czasie jednego cyklu oscylacji opisana zależnością $\lambda = \frac{\nu}{f}$
+\end{itemize}
+
+
+W przypadku sinusoidalnej fali podłużnej ciśnienie akustyczne jest definiowane jako przemieszczające się zaburzenie ciśnienia o wartości
+\begin{equation}
+    p(t) = P sin(\omega t + \varphi).
+\end{equation}
+Dla tak opisanego dźwięku można określić parametr \textbf{ciśnienia efektywnego $p_{rms}$} zdefiniowanego jako
+\begin{equation}
+p_{rms}=\sqrt{\frac{1}{T}\int_0^T p^2(t)dt}
+\end{equation} \cite{crocker_handbook_nodate}
+Natężenie dźwięku $I$, jednostkę charakteryzującą moc przepływającą przez zamkniętą powierzchnię otaczającą źródło jest określana jako stosunek amplitudy $p$ do powierzchni. Dla fali płaskiej, czyli w przybliżeniu fali w dużej odległości od źródła punktowego, natężenie definiuje się następująco:
+\begin{equation}
+    I(r) = \frac{p_{rms}^2}{\rho c_0},
+\end{equation} \cite{arata_investigation_1979}
+gdzie $rho$ to gęstość ośrodka a $c_0$ to prędkość dźwięku w ośrodku.
+Z tak określonego równania można wyliczyć moc punktowego źródła dźwięku emitującego w połówkę sfery za pomocą równania
+\begin{equation}
+    P = \frac{1}{2}  I_{śr}\, 4 \pi r^2 = \frac{p_{rms}^2}{\rho c_0}2 \pi r^2
+\end{equation} \cite{crocker_handbook_nodate}
+zakładając brak wnikania dźwięku w podłoże. Wynika z tego, że natężenie $I$ jest odwrotnie proporcjonalne do kwadratu odległości $r$ od źródła.
+Znając relację natężenia do ciśnienia akustycznego, można także zauważyć, że ciśnienie jest odwrotnie proporcjonalne do odległości do źródła.
+Poziom natężenia dźwięku $L$, jednostka biorąca pod uwagę charakter wrażliwości słuchu człowieka, jest definiowana jako
+\begin{equation}
+    L = 20\log_{10}\frac{p_{rms}}{p_{ref}}\, \mathrm{dB},\quad  \mathrm{gdzie}\quad p_{ref} = 2\cdot10^{-5} \, \mathrm{Pa}
+\end{equation} \cite{crocker_handbook_nodate}.
+
+\section{Generowanie dźwięku podczas spawania}
+Dźwięk wytwarzany podczas spawania pochodzi z trzech źródeł: urządzeń spawalniczych, osłony gazowej i samego łuku elektrycznego. Zaobserwowano jednak, że natężenie dźwięku pochodzącego ze źródeł innych niż łuk jest znacznie niższe niż generowanego przez łuk\cite{schiebeck_audible_1991,saini_investigation_1998}, oraz jest pomijalne przy umieszczaniu mikrofonu blisko obszaru spawania\cite{luksa_przydatnosc_2012}.
+
+Podczas analizy dźwięku generowanego przez łuk, dla odległości mikrofonu zbierającego niżej analizowane dane, można traktować go jako źródło punktowe, położone w pobliżu sztywnej powierzchni (spawanej blachy), emitujące energię w obszar o kształcie połówki sfery\cite{arata_investigation_1979}.
+
+Dla spawania zwarciowego metodą GMAW, sygnał akustyczny ma charakter cyklicznych impulsów akustycznych  \cite{arata_investigation_1979, horvat_monitoring_2011} o średnim czasie trwania 3-6 ms\cite{luksa_przydatnosc_2012} mających charakter fali uderzeniowej \cite{arata_investigation_1979} i związanych z zajarzaniem i wygasaniem łuku pomiędzy zwarciami. Na to nałożony jest szum o charakterze turbulentnym pochodzący głównie od oscylacji łuku, elektrody i jeziorka oraz relaksacji naprężeń wewnątrz spawanego materiału\cite{horvat_monitoring_2011}.
+
+
+Jak szczegółowo zbadano, wpływ na parametry sygnału dźwiękowego mają: 
+\begin{enumerate}
+\item moc wejściowa\cite{arata_investigation_1979, luksa_przydatnosc_2012},
+\item szybkości spawania\cite{arata_investigation_1979},
+\item wielkość przepływu gazu osłonowego\cite{arata_investigation_1979},
+\item rodzaj gazu osłonowego\cite{arata_investigation_1979, luksa_przydatnosc_2012},
+\item wysunięcie drutu z elektrody\cite{arata_investigation_1979},
+\item rodzaj prostownika użytego w źródle zasilania\cite{luksa_przydatnosc_2012},
+\item stan powierzchni spawanych elementów
+\end{enumerate}
+i inne czynniki.
+
+Silna zależność dźwięku emitowanego w procesie spawania przez łuk od warunków zewnętrznych i parametrów pracy czyni go obiecującym źródłem informacji diagnostycznych do wykrywania wad powstałych podczas układania spoin.
+
+
+\section{Analiza sygnału akustycznego na potrzeby diagnozowania błędów w procesie spawania}
+
+Ze względu na silnie losowy charakter emitowanych dźwięków nie jest możliwa prosta ocena, czy proces spawania przebiegał poprawnie. W tym celu przy analizie sygnału akustycznego wykorzystuje się podzbiór jego cech punktowych i funkcyjnych dających dostatecznie dużo informacji najmniejszym nakładem obliczeniowym. Małe opóźnienie jest jest również pożądane w sytuacji monitorowania i korekcji procesu on-line.
+
+\subsection{Badania dla procesu GMAW}
+
+    Już w 1991r. Schiebeck\cite{schiebeck_audible_1991} zastanawiał się nad możliwością wykorzystania sygnału akustycznego do diagnozowania stabilności procesu spawania MAG, jednak oprócz porównania charakterystycznych cech empirycznych nie zaproponował użytecznego wskaźnika poza odchyleniem standardowym.
+    
+    Saini i Floyd \cite{saini_investigation_1998} zaproponowali i zbadali szereg cech sygnały akustycznego, konkludując, że częstotliwość przejść przez zero, pierwiastek z amplitudy i współczynnik kształtu pozwalają na wykrywanie odchyłek od idealnego zachowania łuku, a obiecujące są parametry domeny częstotliwościowej pod warunkiem dysponowania odpowiednią mocą obliczeniową.
+    
+    Grad i in.\cite{grad_feasibility_2004} zbadali możliwość monitorowania procesu MAG z pomocą sygnałów akustycznych i przetwornika drgań przymocowanego do spawanego materiału i stwierdzili przydatność cech sygnału, w szczególności kurtozy i dominującej częstotliwości w widmie mocy odpowiadającej transportowi kropli materiału, do oceny stabilności procesu
+    
+    Yusof i in. \cite{yusof_analysis_2014}stwierdzają (zbadana została metoda MiG) możliwość wykrycia z użyciem techniki rozkładu na mody empiryczne (Empirical Mode Decomposition, EMD) wystąpienia rozprysku lub oscylacji jeziorka, mogących prowadzić do powstania defektu. 
+
+\section{Źródło danych wykorzystanych w pracy}
+Niniejsza analiza bazuje na eksperymencie, w którym zebrane zostały dane z monitorowania zmiennych związanych z procesem spawania elementów z różnymi klasami uszkodzeń. Obserwowane były:
+\begin{enumerate}
+    \item napięcie i prąd spawania,
+    \item prędkość spawania,
+    \item natężenie przepływu gazu osłonowego,
+    \item prędkość podawania drutu,
+    \item emitowany sygnał akustyczny łuku spawalniczego
+    \item obrazy wizyjne i termowizyjne łuku spawalniczego.
+\end{enumerate}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.6\linewidth]{stanowisko.png}
+    \caption{Caption}
+    \label{fig:stanowisko}
+\end{figure}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\linewidth]{surowy_sygnal.png}
+    \caption{Zarejestrowane dane dla 3 przykładowych pomiarów}
+    \label{fig:3_runs}
+\end{figure}
+Stanowisko pomiarowe (rys. \ref{fig:stanowisko})
+pozwalało na rejestrację procesu zautomatyzowanego spawania w pozycji podolnej procesem GMAW płyty o grubości 5mm drutem o średnicy 1.2~mm. Na potrzeby tej pracy wykorzystano wyłącznie oceny jakości połączeń oraz sygnał dźwiękowy zarejestrowany mikrofonem pola swobodnego 40BR firmy G.R.A.S. z osłoną przeciwwietrzną. Sygnał był próbkowany z częstotliwością 250~kHz, lecz niniejsze rozważania wykorzystują tylko informacje z zakresu słyszalnego. W badaniu zasymulowano najczęstsze przyczyny powstawanie niepoprawności w obrębie spoiny, a w szczególności:
+\begin{enumerate}
+    \item zmiany natężenia prądu i napięcia łuku,
+    \item brak osłony gazowej,
+    \item zużycie rolek podających drut,
+    \item zanieczyszczenie powierzchni spawanej olejem,
+    \item korozja drutu lub powierzchni spawanej,
+    \item błędy ukosowania krawędzi spoiny oraz odstępu między płytami,
+    \item zmiany prędkości spawania.
+\end{enumerate}
+Oprócz tego wykonano serię spoin bez wprowadzania zakłóceń.
+
+
+
+\section{Cechy wybrane na potrzeby tej pracy}
+\subsection{Kurtoza}
+Z definicji:
+\begin{equation}
+    \mathrm{Kurt}= \frac{\mu_4}{\sigma^4}-3,
+\end{equation}
+gdzie $\mu_4$ to moment centralny 4. rzędu.
+Parametr został wykorzystany ze względu na obserwowaną w wielkości ogonów (skrzydeł, wąsów) rozkłady różnicę względem rozkładu normalnego. Przewidywano, że większa burzliwość procesu w przypadku napotkania defektów materiału lub innych zaburzeń wpłynie na zwiększenie liczby obserwacji skrajnych wartości ciśnienia. Dodatkowo, parametr ten okazał się istotny w \cite{fidali_detection_2018}
+
+\subsection{Entropia sygnału}
+    Z definicji entropii dla dyskretnej zmiennej losowej $X$ o zbiorze wartości $\Omega = \{x_1, x_2, \dots , x_i\}$, 
+    \begin{equation}
+        H(X) = - \sum_i^N \left( p(x_i) \, log_2 p(xi) \right)
+    \end{equation}co dla sygnału przekłada się na:
+    \begin{equation}
+        H(t) = -\sum_m^N \left( P(t, m) \, log_2P(t, m) \right)
+    \end{equation}gdzie P(t, m) to moc m-tego binu częstotliwości znormalizowanego spektrum w chwili t.
+    Parametr ten wybrano jako kolejną miarę losowości procesu która zmienia się w chwilach powstawania wady.
+\subsection{Parametry rozkładu beta}
+Rozkład beta jest zdefiniowany jako
+\begin{equation}
+    f(x, a, b) = \frac{x^{a-1}(1-x)^{b-1}}{\mathrm{B}\,(a, b)}\,,\quad gdzie \quad \mathrm{B}\, (a, b) = \frac{\Gamma(a)\Gamma(b)}{\Gamma(a+b)}
+\end{equation}Korzystając ze związku parametrów $a$ i $b$ ze średnią $\mu$ i odchylenia standardowego $\sigma$ (metoda momentów), można znaleźć wartości parametrów bez skomplikowanych algorytmów dopasowujących krzywe.
+\begin{equation}
+a = \mu \left( \frac{\mu(1-\mu)}{\sigma^2} -1 \right)
+\end{equation}
+\begin{equation}
+b = \frac{a(1-\mu)}{\mu}
+\end{equation}
+Parametry rozkładu beta użyto aby uwydatnić zmiany asymetrii  przebiegu sygnału. Niestety rozkład jest określony w przedziale [0:1], dlatego w skutek normalizacji okna tracona jest informacja o wartościach przyjmowanych przez sygnał w oknie.
+\section{Przygotowanie danych}
+Częstotliwość próbkowania sygnału akustycznego została obniżona metodą \'sinc\' z 250~kHz do 50~kHz oraz podzielona na pasma o szerokościach oktawy o częstotliwościach centralnych 16~Hz do 16~kHz zgodnie z normą IEC 61260:2014. Sygnał w każdym paśmie podzielono na okna o szerokości 8192 próbek (co przekłada się na ok. 164~ms), zachodzące na siebie w 50\%. Mniejsza szerokość okna uniemożliwia wnioskowanie dla niższych częstotliwości - musi być ona (czasowo) większa niż okres oscylacji sygnału w najniższym paśmie. Dla każdego okna obliczono wartości cech i przedstawiono je w razem za pomocą mapy barwnej.
+
+Aby móc wnioskować o związku sygnału akustycznego z prądem i napięciem, naniesiono je na pomocniczy wykres: prąd został przepróbkowany na 500~Hz aby zwiększyć czytelność wykresu, napięcie ze względu na dużą zmienność przedstawiono po przypisaniu do jednego z 128 binów wartości rozłożonych równomiernie od wartości minimalnej do maksymalnej napięcia zarejestrowanej w czasie danego badania. Zaczernienie binu określa poglądowo względny czas spędzany w danym zakresie wartości.
+
+\section{Wyniki analiz}
+	\subsection{Brak wad}
+	Obserwuje się dość znaczne skoki wartości kurtozy oraz parametrów rozkładu beta przy normalnym spawaniu, zwłaszcza dla wartości powyżej 1~kHz. Jak można było przewidywać, entropia jest wysoka dla pasm o wysokich częstotliwościach, gdzie znajduje się większość szumu, a niska w niskich. 
+	\includepdf[landscape=true]{tex/brak_k_01_.pdf}
+	
+    \subsection{Korozja drutu}
+    W prezentowanych cechach sygnału obserwuje się kilkukrotne zaburzenia procesu, objawiające się wzrostem wartości kurtozy i parametrów rozkładu beta oraz spadkiem entropii w pasmach powyżej ok. 200~Hz.
+    W okolicach 9-10 sekundy nagrania widoczny jest odprysk od strony grani, z którym związane jest najbardziej wyróżniające się zaburzenie. 
+    Obserwuje się współwystępowanie oscylacji prądu równocześnie z zaburzeniami w sygnale dźwiękowym.
+	\includepdf[landscape=true]{tex/korozja_drut_k_02_.pdf}
+	
+	\subsection{Zmiana odstępu blach}
+Obserwuje się wzrost gęstości pików wysokiej wartości kurtozy i parametrów a, b dla powiększania się rozstępu blach. Różnica jest widoczna na tym nagraniu, jednak porównując z nagraniem procesu spawania bez wad, nie da się zaobserwować znacznej różnicy w zakresie przyjmowanych wartości.
+
+Zaburzenia  entropii widoczne w pasmach 125~Hz do 1~kHz w 11 do 15 sekundzie oraz ok. 27 sekundy są spowodowane zarejestrowaniem rozmów eksperymentatorów. Fakt ten świadczy o podatności systemu rejestrującego na zewnętrzne zaburzenia. Widać je również w postaci delikatnych cieni na przedstawieniu kurtozy i parametrów a, b.
+	\includepdf[landscape=true]{tex/zmiana_odstep_blach_d_01_.pdf}
+	
+	\subsection{Zmiana prądu}
+Zmiany prądu są zauważalne szczególnie dla entropii, szczególnie poprzez jej zwiększenie w paśmie średnich i wysokich częstotliwości, jesdak można zaobserwować pewne wygładzenie pozostałych cech także w tym obszarze związane ze zwiększeniem prądu.
+	\includepdf[landscape=true]{tex/zmiana_I_d_01_.pdf}
+	
+	\subsection{Zmiana napięcia}
+	Zmiany napięcia wyraźnie manifestują się w zarejestrowanym sygnale dźwiękowym: jego podwyższenie powoduje bardzo widoczne zwiększenie wartości cech poza entropią, która nieznacznie spada. Dotyczy to całego zakresu częstotliwości.
+	
+	Obniżenie napięcia powoduje oscylacje, które znacznie obniżają entropię w środkowym paśmie. Obserwuje się wystąpienie dwóch anomalii widocznych w parametrach kurtozy i a, b w okresie wzmożonych oscylacji prądu.
+	\includepdf[landscape=true]{tex/zmiana_U_d_01_.pdf}
+	
+	\subsection{Korozja blachy}
+	Nie zaobserwowano znaczącej różnicy pomiędzy obszarami skorodowanymi i wolnymi od korozji.
+	\includepdf[landscape=true]{tex/kor_blacha_k_01_.pdf}
+	
+	\subsection{Zmiana ukosowania}
+	Zaobserwowano niewielki wzrost kurtozy oraz wartości parametrów a, b oraz niewielki spadek entropii w średnim paśmie wraz ze zwiększaniem kąta rowka.
+	\includepdf[landscape=true]{tex/zmiana_ukosowanie_d_01_.pdf}
+	
+	\subsection{Otwory w ukosowaniu}
+	Nie udało się stwierdzić występowania anomalii w cechach sygnału związanych z obecnością otworów.
+	\includepdf[landscape=true]{tex/ukosowanie_otwory_d_01_.pdf}
+	
+	\subsection{Zabrudzenie olejem}
+	Obszar z błędami w spoinie pokrywa się z wyraźnym podwyższeniem wartości kurtozy i a, b orz spadkiem entropii, jednak zauważono, że nieprawidłowości spoiny zaczynają się przed wystąpieniem zaburzeń sygnału i kończą po ich ustąpieniu.
+	
+	Dodatkowo pod koniec nagrania zaobserwowano mniejszą anomalię, niewidoczną na spoinie.
+	\includepdf[landscape=true]{tex/zabr_olej_k_01_.pdf}
+	
+	\subsection{Zmiana prędkości posuwu}
+	W obszarze przyśpieszenia posuwu wyraźnie widać spadek entropii oraz nieznaczny wzrost wartości pozostałych cech, szczególnie kurtozy. Wraz ze zmianą prędkości posuwu zmieniano nieco napięcie (+/- 15\%) dlatego ciężko jednoznacznie określić przyczynę występowania zaburzeń sygnału.
+	\includepdf[landscape=true]{tex/zmiana_V_d_01_.pdf}
+
+	\subsection{Zużycie rolki podające drut}
+	Zużycie rolki powoduje nierównomierną prędkość podawania drutu, co powinno być widoczne na spoinie. Błędy te są szczególnie widoczne na spoinie po 30. sekundzie i objawiają się nieznacznym spadkiem entropii oraz wzrostem wartości pozostałych cech w paśmie średnim i wysokim. 
+	
+	Obserwowane oscylacje napięcia w przedziale czasu od 21. do 28. sekundy widoczne są jako nieznaczne wyrównanie wartości (rozmycie, cień) cech w zakresie średnich i wysokich częstotliwości.
+	\includepdf[landscape=true]{tex/zuz_rolki_k_01_.pdf}
+	
+	\subsection{Brak gazu osłonowego}
+	Widoczne anomalie w entropii  w średnim zakresie częstotliwości są nagraniem komend eksperymentatora dotyczących włączania i wyłączania przepływu gazu, jednak nie zaobserwowano związanych z tym zmian na spoinie. Nie udało się powiązać stanu przepływu gazu z obrazem cech.
+	\includepdf[landscape=true]{tex/brak_gaz_k_01_.pdf}
+	
+	\subsection{Wnioski końcowe}
+	Zarejestrowany sygnał, po przetworzeniu w celu uzyskania wartości interesujących cech, charakteryzuje się sporym szumem, który ukrywa anomalie sygnalizujące wystąpienie wad, jednak jest są one w niektórych przypadkach możliwe do oceny, szczególnie zmiana napięcia i prądu spawania oraz korozja drutu były wyraźnie zauważalne. Brak znajomości dokładnego miejsca wystąpienia wad (patrz: zabrudzenie olejem, brak gazu) powoduje trudność w klasyfikacji które zaburzenia sygnału są decydujące przy przewidywaniu jakości spoiny.
+	
+	Nie wyciągnięto żadnych dodatkowych informacji z parametru a względem parametru b rozkładu beta, dlatego proponuje się zrezygnować z nich, pozostawiając jedynie kurtozę, jako że obserwacje dla tych 3 cech były najczęściej identyczne. Proponuje się wprowadzić w ich miejsce skośność aby lepiej uchwycić asymetrię rozkładu.
+	
+
+
+\bibliographystyle{plain} 
+\bibliography{references}
+
+\end{document}
